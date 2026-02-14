@@ -5,6 +5,8 @@ from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.base import Team, TeamMember, User
 from app.schemas.team import TeamCreate, TeamUpdate, TeamMemberAdd
+from app.db.redis import cache, invalidate_cache
+from app.services.events import events
 
 
 async def create_team(db: AsyncSession, team_in: TeamCreate, owner_id: int) -> Team:
@@ -27,9 +29,13 @@ async def create_team(db: AsyncSession, team_in: TeamCreate, owner_id: int) -> T
     
     await db.commit()
     await db.refresh(db_team)
+    
+    await events.publish("team.created", {"team_id": db_team.id, "owner_id": owner_id}, resource_id=db_team.id)
+    
     return db_team
 
 
+@cache("team", expire=1800, include_args=["team_id"])
 async def get_team(db: AsyncSession, team_id: int) -> Optional[Team]:
     """Get a team by ID."""
     result = await db.execute(select(Team).where(Team.id == team_id))
@@ -54,6 +60,10 @@ async def update_team(db: AsyncSession, db_team: Team, team_in: TeamUpdate) -> T
     db.add(db_team)
     await db.commit()
     await db.refresh(db_team)
+    
+    await invalidate_cache("team", db_team.id)
+    await events.publish("team.updated", {"team_id": db_team.id}, resource_id=db_team.id)
+    
     return db_team
 
 

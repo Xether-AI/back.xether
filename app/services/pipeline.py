@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.base import Pipeline, PipelineExecution
 from app.schemas.pipeline import PipelineCreate, PipelineUpdate
+from app.services.events import events
 
 
 async def create_pipeline(db: AsyncSession, pipeline_in: PipelineCreate) -> Pipeline:
@@ -19,7 +20,11 @@ async def create_pipeline(db: AsyncSession, pipeline_in: PipelineCreate) -> Pipe
     db.add(db_pipeline)
     await db.commit()
     await db.refresh(db_pipeline)
+    
+    await events.publish("pipeline.created", {"pipeline_id": db_pipeline.id, "project_id": pipeline_in.project_id}, resource_id=db_pipeline.id)
+    
     return db_pipeline
+
 
 
 async def get_pipeline(db: AsyncSession, pipeline_id: int) -> Optional[Pipeline]:
@@ -42,6 +47,9 @@ async def update_pipeline(db: AsyncSession, db_pipeline: Pipeline, pipeline_in: 
     db.add(db_pipeline)
     await db.commit()
     await db.refresh(db_pipeline)
+    
+    await events.publish("pipeline.updated", {"pipeline_id": db_pipeline.id}, resource_id=db_pipeline.id)
+    
     return db_pipeline
 
 
@@ -65,6 +73,9 @@ async def trigger_pipeline_execution(db: AsyncSession, pipeline_id: int, meta_da
     db.add(db_execution)
     await db.commit()
     await db.refresh(db_execution)
+    
+    await events.publish("pipeline.executed", {"pipeline_id": pipeline_id, "execution_id": db_execution.id}, resource_id=pipeline_id)
+    
     return db_execution
 
 
