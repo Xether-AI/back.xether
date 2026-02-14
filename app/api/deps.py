@@ -3,10 +3,11 @@
 from typing import AsyncGenerator, Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, APIKeyHeader
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.core.security import decode_token
-from app.db.session import async_session
+from app.db.session import AsyncSessionLocal
 from app.models.base import User
 from app.services import user as user_service
 from app.services import api_key as api_key_service
@@ -27,7 +28,7 @@ api_key_header = APIKeyHeader(
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Database session dependency."""
-    async with async_session() as session:
+    async with AsyncSessionLocal() as session:
         yield session
 
 

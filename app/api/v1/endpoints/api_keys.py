@@ -27,8 +27,7 @@ class APIKeyResponse(BaseModel):
     last_used_at: datetime | None = None
     expires_at: datetime | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 @router.post("/", response_model=APIKeyResponse)
@@ -62,7 +61,7 @@ async def revoke_user_api_key(
     api_key_id: int,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user),
-) -> Any:
+):
     """Revoke an API key."""
     success = await api_key_service.revoke_api_key(
         db, api_key_id=api_key_id, user_id=current_user.id
@@ -72,4 +71,4 @@ async def revoke_user_api_key(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="API Key not found",
         )
-    return None
+
