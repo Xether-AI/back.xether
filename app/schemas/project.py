@@ -7,9 +7,10 @@ from pydantic import BaseModel, Field
 
 class ProjectBase(BaseModel):
     """Base Project schema."""
-    name: str = Field(..., min_length=1, max_length=100)
-    description: Optional[str] = Field(None, max_length=255)
-    team_id: int
+    name: str = Field(..., min_length=1, max_length=100, examples=["Image Classification Project"])
+    description: Optional[str] = Field(None, max_length=255, examples=["Project for training ResNet models on satellite imagery."])
+    team_id: int = Field(..., examples=[1])
+
 
 
 class ProjectCreate(ProjectBase):
@@ -19,8 +20,9 @@ class ProjectCreate(ProjectBase):
 
 class ProjectUpdate(BaseModel):
     """Project update schema."""
-    name: Optional[str] = Field(None, min_length=1, max_length=100)
-    description: Optional[str] = Field(None, max_length=255)
+    name: Optional[str] = Field(None, min_length=1, max_length=100, examples=["Updated Project Name"])
+    description: Optional[str] = Field(None, max_length=255, examples=["Updated description."])
+
 
 
 class ProjectResponse(ProjectBase):

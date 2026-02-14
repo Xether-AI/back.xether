@@ -7,11 +7,12 @@ from pydantic import BaseModel, Field
 
 class PipelineBase(BaseModel):
     """Base Pipeline schema."""
-    name: str = Field(..., min_length=1, max_length=100)
-    description: Optional[str] = Field(None, max_length=255)
-    project_id: int
-    config: dict = Field(default_factory=dict)
-    is_active: bool = True
+    name: str = Field(..., min_length=1, max_length=100, examples=["YOLOv8-Training-Pipeline"])
+    description: Optional[str] = Field(None, max_length=255, examples=["Pipeline for training YOLOv8 models."])
+    project_id: int = Field(..., examples=[1])
+    config: dict = Field(default_factory=dict, examples=[{"epochs": 100, "batch_size": 16}])
+    is_active: bool = Field(True, examples=[True])
+
 
 
 class PipelineCreate(PipelineBase):
@@ -21,10 +22,11 @@ class PipelineCreate(PipelineBase):
 
 class PipelineUpdate(BaseModel):
     """Pipeline update schema."""
-    name: Optional[str] = Field(None, min_length=1, max_length=100)
-    description: Optional[str] = Field(None, max_length=255)
-    config: Optional[dict] = None
-    is_active: Optional[bool] = None
+    name: Optional[str] = Field(None, min_length=1, max_length=100, examples=["Updated Pipeline Name"])
+    description: Optional[str] = Field(None, max_length=255, examples=["Updated description."])
+    config: Optional[dict] = Field(None, examples=[{"epochs": 200}])
+    is_active: Optional[bool] = Field(None, examples=[False])
+
 
 
 class PipelineResponse(PipelineBase):
@@ -38,9 +40,10 @@ class PipelineResponse(PipelineBase):
 
 class PipelineExecutionBase(BaseModel):
     """Base Pipeline Execution schema."""
-    pipeline_id: int
-    status: str = "pending"
-    meta_data: Optional[dict] = None
+    pipeline_id: int = Field(..., examples=[1])
+    status: str = Field("pending", examples=["running"])
+    meta_data: Optional[dict] = Field(None, examples=[{"worker_id": "worker-77"}])
+
 
 
 class PipelineExecutionResponse(PipelineExecutionBase):

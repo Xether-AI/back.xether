@@ -7,7 +7,8 @@ from app.schemas.auth import UserResponse
 
 class UserUpdate(BaseModel):
     """User update schema."""
-    email: Optional[EmailStr] = None
-    role: Optional[str] = None
-    is_active: Optional[bool] = None
-    is_superuser: Optional[bool] = None
+    email: Optional[EmailStr] = Field(None, examples=["new.email@xether.ai"])
+    role: Optional[str] = Field(None, examples=["admin"])
+    is_active: Optional[bool] = Field(None, examples=[True])
+    is_superuser: Optional[bool] = Field(None, examples=[False])
+

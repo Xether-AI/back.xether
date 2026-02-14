@@ -21,17 +21,20 @@ class TokenData(BaseModel):
 
 class UserBase(BaseModel):
     """Base User schema."""
-    email: EmailStr
+    email: EmailStr = Field(..., examples=["user@xether.ai"])
+
 
 
 class UserCreate(UserBase):
     """User creation schema."""
-    password: str = Field(..., min_length=8)
+    password: str = Field(..., min_length=8, examples=["strong_password_123"])
+
 
 
 class UserLogin(UserBase):
     """User login schema."""
-    password: str
+    password: str = Field(..., examples=["strong_password_123"])
+
 
 
 class UserResponse(UserBase):

@@ -7,8 +7,9 @@ from pydantic import BaseModel, Field
 
 class TeamBase(BaseModel):
     """Base Team schema."""
-    name: str = Field(..., min_length=1, max_length=100)
-    description: Optional[str] = Field(None, max_length=255)
+    name: str = Field(..., min_length=1, max_length=100, examples=["Research Team"])
+    description: Optional[str] = Field(None, max_length=255, examples=["Core research and development team."])
+
 
 
 class TeamCreate(TeamBase):
@@ -18,8 +19,9 @@ class TeamCreate(TeamBase):
 
 class TeamUpdate(BaseModel):
     """Team update schema."""
-    name: Optional[str] = Field(None, min_length=1, max_length=100)
-    description: Optional[str] = Field(None, max_length=255)
+    name: Optional[str] = Field(None, min_length=1, max_length=100, examples=["Updated Research Team"])
+    description: Optional[str] = Field(None, max_length=255, examples=["New team description."])
+
 
 
 class TeamMember(BaseModel):
@@ -32,8 +34,9 @@ class TeamMember(BaseModel):
 
 class TeamMemberAdd(BaseModel):
     """Schema for adding a member to a team."""
-    user_id: int
-    role: str = "viewer"
+    user_id: int = Field(..., examples=[2])
+    role: str = Field("viewer", examples=["developer"])
+
 
 
 class TeamResponse(TeamBase):
