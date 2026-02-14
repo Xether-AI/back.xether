@@ -35,12 +35,28 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 # Create FastAPI application
 app = FastAPI(
     title=settings.app_name,
+    description="""
+Xether AI Backend - The Central Control Plane for Distributed AI Workflows.
+
+### Features
+* **Auth**: Secure JWT and API Key based authentication.
+* **Teams & RBAC**: Advanced team management with role-based access control.
+* **Datasets**: Reliable dataset registration and versioning.
+* **Pipelines**: Scalable ML pipeline orchestration and execution tracking.
+* **Observability**: Structured logging, Prometheus metrics, and advanced health checks.
+""",
     version=settings.app_version,
+    contact={
+        "name": "Xether AI Team",
+        "url": "https://xether.ai",
+        "email": "support@xether.ai",
+    },
     docs_url=settings.docs_url,
     redoc_url=settings.redoc_url,
     openapi_url=f"{settings.api_v1_prefix}/openapi.json",
     lifespan=lifespan,
 )
+
 
 # Set up CORS
 app.add_middleware(
