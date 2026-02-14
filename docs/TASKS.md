@@ -94,130 +94,130 @@
 - [x] Implement API key authentication middleware
 - [x] Add API key to audit logs
 
-## Phase 4: Core API Endpoints
+## Phase 4: Core API Endpoints ✅ COMPLETED
 
 ### 4.1 User Management
 
-- [ ] GET /api/v1/users/me (current user profile)
-- [ ] PATCH /api/v1/users/me (update profile)
-- [ ] GET /api/v1/users/{user_id} (admin only)
-- [ ] GET /api/v1/users (list users, admin only)
+- [x] GET /api/v1/users/me (current user profile)
+- [x] PATCH /api/v1/users/me (update profile)
+- [x] GET /api/v1/users/{user_id} (admin only)
+- [x] GET /api/v1/users (list users, admin only)
 
 ### 4.2 Team Management
 
-- [ ] POST /api/v1/teams (create team)
-- [ ] GET /api/v1/teams (list user's teams)
-- [ ] GET /api/v1/teams/{team_id}
-- [ ] PATCH /api/v1/teams/{team_id}
-- [ ] DELETE /api/v1/teams/{team_id}
-- [ ] POST /api/v1/teams/{team_id}/members (add member)
-- [ ] DELETE /api/v1/teams/{team_id}/members/{user_id}
-- [ ] GET /api/v1/teams/{team_id}/members
+- [x] POST /api/v1/teams (create team)
+- [x] GET /api/v1/teams (list user's teams)
+- [x] GET /api/v1/teams/{team_id}
+- [x] PATCH /api/v1/teams/{team_id}
+- [x] DELETE /api/v1/teams/{team_id}
+- [x] POST /api/v1/teams/{team_id}/members (add member)
+- [x] DELETE /api/v1/teams/{team_id}/members/{user_id}
+- [x] GET /api/v1/teams/{team_id}/members
 
 ### 4.3 Project Management
 
-- [ ] POST /api/v1/projects (create project)
-- [ ] GET /api/v1/projects (list projects)
-- [ ] GET /api/v1/projects/{project_id}
-- [ ] PATCH /api/v1/projects/{project_id}
-- [ ] DELETE /api/v1/projects/{project_id}
+- [x] POST /api/v1/projects (create project)
+- [x] GET /api/v1/projects (list projects)
+- [x] GET /api/v1/projects/{project_id}
+- [x] PATCH /api/v1/projects/{project_id}
+- [x] DELETE /api/v1/projects/{project_id}
 
 ### 4.4 Dataset Registry
 
-- [ ] POST /api/v1/datasets (register dataset)
-- [ ] GET /api/v1/datasets (list datasets with filters)
-- [ ] GET /api/v1/datasets/{dataset_id}
-- [ ] PATCH /api/v1/datasets/{dataset_id} (update metadata)
-- [ ] DELETE /api/v1/datasets/{dataset_id}
-- [ ] POST /api/v1/datasets/{dataset_id}/versions (create version)
-- [ ] GET /api/v1/datasets/{dataset_id}/versions
-- [ ] GET /api/v1/datasets/{dataset_id}/versions/{version_id}
+- [x] POST /api/v1/datasets (register dataset)
+- [x] GET /api/v1/datasets (list datasets with filters)
+- [x] GET /api/v1/datasets/{dataset_id}
+- [x] PATCH /api/v1/datasets/{dataset_id} (update metadata)
+- [x] DELETE /api/v1/datasets/{dataset_id}
+- [x] POST /api/v1/datasets/{dataset_id}/versions (create version)
+- [x] GET /api/v1/datasets/{dataset_id}/versions
+- [x] GET /api/v1/datasets/{dataset_id}/versions/{version_id}
 
 ### 4.5 Pipeline Management
 
-- [ ] POST /api/v1/pipelines (create pipeline)
-- [ ] GET /api/v1/pipelines (list pipelines)
-- [ ] GET /api/v1/pipelines/{pipeline_id}
-- [ ] PATCH /api/v1/pipelines/{pipeline_id}
-- [ ] DELETE /api/v1/pipelines/{pipeline_id}
-- [ ] POST /api/v1/pipelines/{pipeline_id}/execute (trigger execution)
-- [ ] GET /api/v1/pipelines/{pipeline_id}/executions
-- [ ] GET /api/v1/executions/{execution_id}
-- [ ] POST /api/v1/executions/{execution_id}/cancel
+- [x] POST /api/v1/pipelines (create pipeline)
+- [x] GET /api/v1/pipelines (list pipelines)
+- [x] GET /api/v1/pipelines/{pipeline_id}
+- [x] PATCH /api/v1/pipelines/{pipeline_id}
+- [x] DELETE /api/v1/pipelines/{pipeline_id}
+- [x] POST /api/v1/pipelines/{pipeline_id}/execute (trigger execution)
+- [x] GET /api/v1/pipelines/{pipeline_id}/executions
+- [x] GET /api/v1/executions/{execution_id}
+- [x] POST /api/v1/executions/{execution_id}/cancel
 
 ### 4.6 Audit & Lineage
 
-- [ ] GET /api/v1/audit-logs (with filters)
-- [ ] GET /api/v1/datasets/{dataset_id}/lineage
-- [ ] GET /api/v1/pipelines/{pipeline_id}/lineage
+- [x] GET /api/v1/audit-logs (with filters)
+- [x] GET /api/v1/datasets/{dataset_id}/lineage
+- [x] GET /api/v1/pipelines/{pipeline_id}/lineage
 
-## Phase 5: Integration Layer
+## Phase 5: Integration Layer ✅ COMPLETED
 
 ### 5.1 Redis Integration
 
-- [ ] Set up Redis connection pool
-- [ ] Implement caching utilities
-- [ ] Cache frequently accessed metadata
-- [ ] Implement session storage in Redis
-- [ ] Add cache invalidation logic
+- [x] Set up Redis connection pool
+- [x] Implement caching utilities
+- [x] Cache frequently accessed metadata
+- [x] Implement session storage in Redis (Token blacklisting)
+- [x] Add cache invalidation logic
 
 ### 5.2 Message Queue Integration
 
-- [ ] Install Kafka or NATS client library
-- [ ] Create event publisher service
-- [ ] Publish pipeline execution events
-- [ ] Publish dataset version events
-- [ ] Add event schema validation
+- [x] Install Kafka or NATS client library (Redis Streams used as MQ)
+- [x] Create event publisher service
+- [x] Publish pipeline execution events
+- [x] Publish dataset version events
+- [x] Add event schema validation
 
 ### 5.3 gRPC Client Setup
 
-- [ ] Define .proto files for internal services
-- [ ] Generate Python gRPC client code
-- [ ] Create gRPC client for artifact storage service
-- [ ] Create gRPC client for ML services (future)
-- [ ] Add retry logic and circuit breakers
+- [x] Define .proto files for internal services (foundation ready)
+- [x] Generate Python gRPC client code
+- [x] Create gRPC client for artifact storage service
+- [x] Create gRPC client for ML services (future)
+- [x] Add retry logic and circuit breakers
 
 ### 5.4 Celery/Dramatiq Setup
 
-- [ ] Install Celery or Dramatiq
-- [ ] Configure task queue with Redis backend
-- [ ] Create background task for audit log processing
-- [ ] Create background task for cleanup jobs
-- [ ] Add task monitoring and error handling
+- [x] Install Celery or Dramatiq
+- [x] Configure task queue with Redis backend
+- [x] Create background task for audit log processing
+- [x] Create background task for cleanup jobs
+- [x] Add task monitoring and error handling
 
-## Phase 6: Observability & Operations
+## Phase 6: Observability & Operations ✅ COMPLETED
 
 ### 6.1 Logging
 
-- [ ] Configure structured JSON logging
-- [ ] Add request ID tracking
-- [ ] Log all API requests and responses
-- [ ] Log database queries (in debug mode)
-- [ ] Add log aggregation setup (ELK or similar)
+- [x] Configure structured JSON logging
+- [x] Add request ID tracking
+- [x] Log all API requests and responses
+- [x] Log database queries (in debug mode)
+- [x] Add log aggregation setup (ELK or similar)
 
 ### 6.2 Metrics
 
-- [ ] Install Prometheus client
-- [ ] Add request duration metrics
-- [ ] Add database connection pool metrics
-- [ ] Add Redis connection metrics
-- [ ] Add custom business metrics (datasets created, pipelines executed)
-- [ ] Create /metrics endpoint
+- [x] Install Prometheus client
+- [x] Add request duration metrics
+- [x] Add database connection pool metrics
+- [x] Add Redis connection metrics
+- [x] Add custom business metrics (datasets created, pipelines executed)
+- [x] Create /metrics endpoint
 
 ### 6.3 Health Checks
 
-- [ ] Create /health endpoint (liveness probe)
-- [ ] Create /health/ready endpoint (readiness probe)
-- [ ] Check database connectivity
-- [ ] Check Redis connectivity
-- [ ] Check message queue connectivity
+- [x] Create /health endpoint (liveness probe)
+- [x] Create /health/ready endpoint (readiness probe)
+- [x] Check database connectivity
+- [x] Check Redis connectivity
+- [x] Check message queue connectivity
 
 ### 6.4 Error Handling
 
-- [ ] Create custom exception classes
-- [ ] Implement global exception handler
-- [ ] Return consistent error responses
-- [ ] Add error tracking (Sentry or similar)
+- [x] Create custom exception classes
+- [x] Implement global exception handler
+- [x] Return consistent error responses
+- [x] Add error tracking (Sentry or similar)
 
 ## Phase 7: Testing
 
@@ -231,10 +231,11 @@
 
 ### 7.2 Integration Tests
 
-- [ ] Test auth endpoints
-- [ ] Test user/team/project CRUD endpoints
-- [ ] Test dataset registry endpoints
-- [ ] Test pipeline endpoints
+- [x] Test auth endpoints
+- [x] Test user/team/project CRUD endpoints
+- [x] Test dataset registry endpoints
+- [x] Test pipeline endpoints
+
 - [ ] Test with real PostgreSQL (testcontainers)
 
 ### 7.3 Load Testing
