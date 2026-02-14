@@ -10,12 +10,15 @@ from main import app
 from app.db.redis import init_redis, close_redis
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="function", autouse=True)
 async def initialize_redis():
     """Initialize Redis for tests."""
     await init_redis()
     yield
-    await close_redis()
+    from app.db.redis import redis_client
+    if redis_client:
+        await redis_client.aclose()
+
 
 
 
