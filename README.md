@@ -45,85 +45,81 @@ The main backend service for Xether AI, providing the core API layer, authentica
 
 ### Communication Protocols
 
-- **REST API**: External client communication, CRUD operations
-- **gRPC**: Internal service-to-service communication (ML services, pipeline workers)
-- **Event Bus**: Asynchronous pipeline orchestration (Kafka/RabbitMQ/NATS)
+- **REST API**: External client communication, CRUD operations (FastAPI)
+- **gRPC**: Internal service-to-service communication foundation initialized.
+- **Event Bus**: Redis Streams for asynchronous event publishing (datasets, pipelines).
 
 ### Technology Stack
 
 - **Language**: Python 3.11+
 - **Framework**: FastAPI
 - **ASGI Server**: Uvicorn + Gunicorn (production)
-- **ORM**: SQLAlchemy 2.0
+- **ORM**: SQLAlchemy 2.0 (Async)
 - **Database**: PostgreSQL 15+
 - **Migrations**: Alembic
-- **Auth**: OAuth2 + JWT (Keycloak or Auth0)
+- **Auth**: OAuth2 + JWT (Internal implementation)
 - **Cache**: Redis 7+
-- **Async Tasks**: Celery or Dramatiq
-- **Message Queue**: Kafka or NATS (event-driven orchestration)
-- **Internal Communication**: gRPC client (to ML services, pipeline workers)
-
-### Why FastAPI?
-
-- **Async support**: Native async/await for high concurrency
-- **Auto-documentation**: OpenAPI/Swagger generated automatically
-- **Type safety**: Pydantic models for validation and serialization
-- **Performance**: Comparable to Node.js and Go for I/O-bound workloads
-- **Clean boundaries**: Easy to maintain service separation
-
-### Critical Design Rule
-
-**This service must never process large datasets.**
-
-It manages metadata and coordinates. Nothing more. If you let it touch heavy data, you deserve the scaling pain you'll get.
-
-## Design Principles
-
-- **Explicit over implicit**: Clear contracts and interfaces
-- **Stateless services**: Horizontal scalability
-- **Fail-fast validation**: Early error detection
-- **Audit everything**: Complete lineage and compliance trails
-- **Enterprise-grade defaults**: Security, reliability, observability
+- **Async Tasks**: Celery with Redis backend
+- **Observability**: Prometheus metrics + Structured JSON Logging
 
 ## Getting Started
-
-> **Note**: This service is currently in the planning/initialization phase.
 
 ### Prerequisites
 
 - Python 3.11+
-- PostgreSQL 15+
-- Redis 7+
-- Kafka or NATS (message broker)
-- MinIO or AWS S3 access (for dataset metadata references)
+- Docker & Docker Compose
+- Redis (Optional if running locally without Docker)
+- PostgreSQL (Optional if running locally without Docker)
 
 ### Development Setup
 
-```bash
-# To be implemented
-```
+1. **Clone the repository**
+2. **Setup virtual environment**:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+3. **Start Infrastructure**:
+   ```bash
+   docker compose up -d
+   ```
+4. **Run Migrations**:
+   ```bash
+   alembic upgrade head
+   ```
+5. **Start Application**:
+   ```bash
+   uvicorn main:app --reload
+   ```
 
-## API Structure (Planned)
+## API Documentation
+
+- **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
+## API Structure
 
 ```
 /api/v1
-├── /auth          # Authentication endpoints
-├── /users         # User management
-├── /teams         # Team and organization management
-├── /projects      # Project workspaces
-├── /datasets      # Dataset registry and metadata
-├── /pipelines     # Pipeline configuration and execution
-├── /jobs          # Job status and monitoring
-└── /audit         # Audit logs and lineage
+├── /auth          # Authentication & Token management
+├── /users         # User profiles & Admin management
+├── /teams         # Team & Membership management
+├── /projects      # Project workspaces & RBAC
+├── /datasets      # Dataset registry & Versioning
+├── /pipelines     # Pipeline config & Execution triggering
+└── /audit-logs    # System audit trails
 ```
 
-## Related Components
+## Testing
 
-- **[Main Pipeline](../main%20pipeline)**: High-performance data processing engine
-- **ML Services**: AI-powered data operations (separate microservices)
-- **[Website](../website)**: Marketing and product website
-- **[Docs](../docs)**: Developer documentation and API references
+Run the full test suite with coverage:
+
+```bash
+pytest --cov=app tests/
+```
 
 ## Status
 
-🚧 **In Development** - Architecture and initial implementation in progress.
+✅ **Phase 7 Complete** - Core API, Auth, Integration, and Testing (76% coverage) implemented.
+🚀 **Phase 8/9 in Progress** - Documentation and Production preparation.

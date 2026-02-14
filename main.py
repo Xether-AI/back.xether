@@ -67,8 +67,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add Observation Middleware
+# Add Observation & Security Middleware
 app.add_middleware(RequestIDMiddleware)
+from app.api.middleware import SecurityHeadersMiddleware
+app.add_middleware(SecurityHeadersMiddleware)
+
 
 # Setup Prometheus
 Instrumentator().instrument(app).expose(app)
