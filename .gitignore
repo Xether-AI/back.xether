@@ -71,3 +71,5 @@ dmypy.json
 .env*
 __init__.py
 __pycache__
+
+migrations/*
