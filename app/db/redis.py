@@ -106,12 +106,17 @@ def cache(
 async def invalidate_cache(key_prefix: str, *args: Any) -> None:
     """Invalidate cache keys matching a prefix and arguments."""
     redis = await get_redis()
-    pattern = f"cache:{key_prefix}:*"
     if args:
         arg_str = ":".join([str(a) for a in args])
-        pattern = f"cache:{key_prefix}:{arg_str}:*"
+        # Match exactly OR as a prefix with a colon to avoid partial matches (e.g. 1 vs 10)
+        keys = await redis.keys(f"cache:{key_prefix}:{arg_str}")
+        keys_extra = await redis.keys(f"cache:{key_prefix}:{arg_str}:*")
+        if keys_extra:
+            keys.extend(keys_extra)
+    else:
+        keys = await redis.keys(f"cache:{key_prefix}:*")
         
-    keys = await redis.keys(pattern)
     if keys:
-        await redis.delete(*keys)
+        await redis.delete(*list(set(keys)))
+
 
