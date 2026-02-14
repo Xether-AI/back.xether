@@ -61,7 +61,9 @@ dev = [
     # Type Stubs
     "types-passlib>=1.7.7",
     "types-python-jose>=3.3.4",
+    "locust>=2.24.0",
 ]
+
 
 [tool.black]
 line-length = 100
