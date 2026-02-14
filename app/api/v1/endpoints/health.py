@@ -1,5 +1,6 @@
 """Health check and diagnostic endpoints."""
 
+from typing import Any
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
@@ -12,14 +13,14 @@ logger = get_logger(__name__)
 
 @router.get("/liveness")
 @router.get("/")
-async def liveness() -> dict[str, str]:
+async def liveness() -> dict[str, Any]:
     """Basic health check for liveness probe."""
     return {"status": "healthy"}
 
 @router.get("/readiness")
 async def readiness(
     db: AsyncSession = Depends(deps.get_db)
-) -> dict[str, str]:
+) -> dict[str, Any]:
     """Complete readiness check including DB and Redis."""
     health_status = {"status": "ready", "checks": {}}
     overall_ready = True

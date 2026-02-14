@@ -2,8 +2,9 @@
 
 import logging
 import sys
-from pythonjsonlogger import jsonlogger
+from pythonjsonlogger import json
 from app.core.config import get_settings
+
 
 settings = get_settings()
 
@@ -12,10 +13,11 @@ def setup_logging():
     log_handler = logging.StreamHandler(sys.stdout)
     
     # Define log format and include standard fields
-    formatter = jsonlogger.JsonFormatter(
+    formatter = json.JsonFormatter(
         fmt='%(asctime)s %(levelname)s %(name)s %(message)s %(request_id)s',
         datefmt='%Y-%m-%dT%H:%M:%SZ'
     )
+
     
     log_handler.setFormatter(formatter)
     
