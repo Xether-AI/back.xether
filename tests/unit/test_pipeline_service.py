@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 from app.services import pipeline as pipeline_service
 from app.models.base import Pipeline, PipelineExecution
-from app.schemas.pipeline import PipelineCreate
+from app.schemas.pipeline import PipelineCreate, PipelineUpdate
 
 @pytest.mark.asyncio
 async def test_create_pipeline_unit():

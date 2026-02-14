@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 from app.services import dataset as dataset_service
 from app.models.base import Dataset, DatasetVersion
-from app.schemas.dataset import DatasetCreate, DatasetVersionCreate
+from app.schemas.dataset import DatasetCreate, DatasetUpdate, DatasetVersionCreate
 
 @pytest.mark.asyncio
 async def test_create_dataset_unit():

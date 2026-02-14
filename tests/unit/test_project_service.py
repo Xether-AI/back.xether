@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 from app.services import project as project_service
 from app.models.base import Project
-from app.schemas.project import ProjectCreate
+from app.schemas.project import ProjectCreate, ProjectUpdate
 
 @pytest.mark.asyncio
 async def test_create_project_unit():
@@ -53,6 +53,29 @@ async def test_list_team_projects_unit():
     assert projects[0].name == "P1"
 
 @pytest.mark.asyncio
+async def test_list_user_projects_unit():
+    """Test listing user projects."""
+    mock_db = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.all.return_value = [Project(id=1, name="P1")]
+    mock_db.execute.return_value = mock_result
+    
+    projects = await project_service.list_user_projects(mock_db, user_id=1)
+    assert len(projects) == 1
+    assert mock_db.execute.called
+
+@pytest.mark.asyncio
+async def test_update_project_unit():
+    """Test updating project details."""
+    mock_db = AsyncMock()
+    mock_project = Project(id=1, name="Old")
+    update_in = ProjectUpdate(name="New")
+    
+    updated = await project_service.update_project(mock_db, mock_project, update_in)
+    assert updated.name == "New"
+    assert mock_db.add.called
+
+@pytest.mark.asyncio
 async def test_delete_project_unit():
     """Test deleting a project."""
     mock_db = AsyncMock()
@@ -64,3 +87,11 @@ async def test_delete_project_unit():
         assert result is True
         assert mock_db.delete.called
         assert mock_db.commit.called
+
+@pytest.mark.asyncio
+async def test_delete_project_fail_unit():
+    """Test deleting non-existent project."""
+    mock_db = AsyncMock()
+    with patch("app.services.project.get_project", return_value=None):
+        result = await project_service.delete_project(mock_db, 999)
+        assert result is False

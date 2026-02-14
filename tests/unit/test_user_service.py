@@ -86,8 +86,35 @@ async def test_authenticate_user_fail_wrong_password():
          patch("app.services.user.verify_password", return_value=False):
         
         user = await user_service.authenticate_user(mock_db, "test@example.com", "wrong_pass")
-        
         assert user is None
+
+
+@pytest.mark.asyncio
+async def test_update_user_unit():
+    """Test updating user details."""
+    mock_db = AsyncMock()
+    mock_user = User(id=1, email="old@example.com")
+    from app.schemas.user import UserUpdate
+    update_in = UserUpdate(email="new@example.com")
+    
+    with patch("app.services.user.invalidate_cache", new_callable=AsyncMock):
+        updated = await user_service.update_user(mock_db, mock_user, update_in)
+        assert updated.email == "new@example.com"
+        assert mock_db.add.called
+        assert mock_db.commit.called
+
+@pytest.mark.asyncio
+async def test_list_users_unit():
+    """Test listing all users."""
+    mock_db = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.all.return_value = [User(id=1, email="u1@e.com")]
+    mock_db.execute.return_value = mock_result
+    
+    users = await user_service.list_users(mock_db)
+    assert len(users) == 1
+    assert mock_db.execute.called
+
 
 @pytest.mark.asyncio
 async def test_get_user_by_id_cache_miss():

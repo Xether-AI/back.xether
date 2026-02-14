@@ -92,3 +92,39 @@ async def test_get_team_members_unit():
     assert len(members) == 1
     assert mock_db.execute.called
 
+@pytest.mark.asyncio
+async def test_update_team_unit():
+    """Test updating team details."""
+    mock_db = AsyncMock()
+    mock_team = Team(id=1, name="Old")
+    from app.schemas.team import TeamUpdate
+    update_in = TeamUpdate(name="New")
+    
+    with patch("app.services.team.invalidate_cache", new_callable=AsyncMock), \
+         patch("app.services.team.events.publish", new_callable=AsyncMock):
+        updated = await team_service.update_team(mock_db, mock_team, update_in)
+        assert updated.name == "New"
+        assert mock_db.add.called
+
+@pytest.mark.asyncio
+async def test_delete_team_unit():
+    """Test deleting a team."""
+    mock_db = AsyncMock()
+    mock_team = Team(id=1, name="T1")
+    with patch("app.services.team.get_team", return_value=mock_team):
+        result = await team_service.delete_team(mock_db, team_id=1)
+        assert result is True
+        assert mock_db.delete.called
+
+@pytest.mark.asyncio
+async def test_remove_team_member_fail_unit():
+    """Test removing non-existent team member."""
+    mock_db = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.first.return_value = None
+    mock_db.execute.return_value = mock_result
+    
+    success = await team_service.remove_team_member(mock_db, team_id=1, user_id=99)
+    assert success is False
+
+
