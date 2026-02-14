@@ -44,3 +44,31 @@ async def authenticate_user(
     if not verify_password(password, user.hashed_password):
         return None
     return user
+
+
+async def update_user(db: AsyncSession, db_user: User, user_in: any) -> User:  # type: ignore[name-defined]
+    """Update a user."""
+    # Using Any for user_in because of circular import if we import UserUpdate here
+    # and User service is often imported by schemas.
+    # Alternatively, we can import inside the function.
+    from app.schemas.user import UserUpdate
+    
+    if isinstance(user_in, dict):
+        update_data = user_in
+    else:
+        update_data = user_in.model_dump(exclude_unset=True)
+        
+    for field, value in update_data.items():
+        setattr(db_user, field, value)
+    
+    db.add(db_user)
+    await db.commit()
+    await db.refresh(db_user)
+    return db_user
+
+
+async def list_users(db: AsyncSession, skip: int = 0, limit: int = 100) -> list[User]:
+    """List users."""
+    result = await db.execute(select(User).offset(skip).limit(limit))
+    return list(result.scalars().all())
+

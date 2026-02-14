@@ -27,6 +27,7 @@ class User(Base):
 
     # Relationships
     owned_teams: Mapped[list["Team"]] = relationship("Team", back_populates="owner")
+    team_memberships: Mapped[list["TeamMember"]] = relationship("TeamMember", back_populates="user")
     audit_logs: Mapped[list["AuditLog"]] = relationship("AuditLog", back_populates="user")
 
 
@@ -47,6 +48,22 @@ class Team(Base):
     # Relationships
     owner: Mapped["User"] = relationship("User", back_populates="owned_teams")
     projects: Mapped[list["Project"]] = relationship("Project", back_populates="team")
+    memberships: Mapped[list["TeamMember"]] = relationship("TeamMember", back_populates="team", cascade="all, delete-orphan")
+
+
+class TeamMember(Base):
+    """Association table for team membership."""
+    __tablename__ = "team_members"
+    
+    team_id: Mapped[int] = mapped_column(Integer, ForeignKey("teams.id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), primary_key=True)
+    role: Mapped[str] = mapped_column(String(50), default="viewer", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relationships
+    team: Mapped["Team"] = relationship("Team", back_populates="memberships")
+    user: Mapped["User"] = relationship("User", back_populates="team_memberships")
+
 
 
 class Project(Base):
