@@ -72,7 +72,7 @@ async def login(
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 async def logout(
     refresh_token: str,
-) -> Any:
+):
     """Logout current user by blacklisting the refresh token."""
     payload = decode_token(refresh_token)
     if payload and payload.get("type") == "refresh":
@@ -83,7 +83,7 @@ async def logout(
             settings.refresh_token_expire_days * 86400,
             "1"
         )
-    return None
+
 
 
 

@@ -98,7 +98,7 @@ async def update_dataset(
     return await dataset_service.update_dataset(db, db_dataset=dataset, dataset_in=dataset_in)
 
 
-@router.delete("/{dataset_id}", status_code=status.HTTP_304_NOT_MODIFIED)
+@router.delete("/{dataset_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_dataset(
     dataset_id: int,
     db: AsyncSession = Depends(deps.get_db),
@@ -115,6 +115,7 @@ async def delete_dataset(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
     
     await dataset_service.delete_dataset(db, dataset_id=dataset_id)
+
 
 
 @router.post("/{dataset_id}/versions", response_model=DatasetVersionResponse, status_code=status.HTTP_201_CREATED)
