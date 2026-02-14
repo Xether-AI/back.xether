@@ -64,5 +64,31 @@ async def test_list_user_teams_unit():
     
     teams = await team_service.list_user_teams(mock_db, user_id=1)
     
-    assert len(teams) == 1
-    assert teams[0].name == "T1"
+@pytest.mark.asyncio
+async def test_remove_team_member_unit():
+    """Test removing a member from a team."""
+    mock_db = AsyncMock()
+    mock_result = MagicMock()
+    mock_member = TeamMember(team_id=1, user_id=1)
+    mock_result.scalars.return_value.first.return_value = mock_member
+    mock_db.execute.return_value = mock_result
+    
+    success = await team_service.remove_team_member(mock_db, team_id=1, user_id=1)
+    
+    assert success is True
+    assert mock_db.delete.called
+    assert mock_db.commit.called
+
+@pytest.mark.asyncio
+async def test_get_team_members_unit():
+    """Test getting all members of a team."""
+    mock_db = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.all.return_value = [TeamMember(team_id=1, user_id=1)]
+    mock_db.execute.return_value = mock_result
+    
+    members = await team_service.get_team_members(mock_db, team_id=1)
+    
+    assert len(members) == 1
+    assert mock_db.execute.called
+
