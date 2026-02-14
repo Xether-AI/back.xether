@@ -7,7 +7,7 @@ from httpx import AsyncClient
 @pytest.mark.asyncio
 async def test_health_check(client: AsyncClient) -> None:
     """Test health check endpoint."""
-    response = await client.get("/health")
+    response = await client.get("/health/liveness")
     assert response.status_code == 200
     assert response.json() == {"status": "healthy"}
 
@@ -15,9 +15,10 @@ async def test_health_check(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_readiness_check(client: AsyncClient) -> None:
     """Test readiness check endpoint."""
-    response = await client.get("/health/ready")
+    response = await client.get("/health/readiness")
     assert response.status_code == 200
-    assert response.json() == {"status": "ready"}
+    assert response.json()["status"] == "ready"
+
 
 
 @pytest.mark.asyncio
