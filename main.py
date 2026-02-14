@@ -7,7 +7,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core import get_settings, setup_logging
+from prometheus_fastapi_instrumentator import Instrumentator
+
 from app.api.v1.api import api_router
+from app.api.middleware import RequestIDMiddleware
+from app.api.v1.endpoints import health
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.db.redis import close_redis, init_redis
@@ -47,21 +51,54 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include API router
+# Add Observation Middleware
+app.add_middleware(RequestIDMiddleware)
+
+# Setup Prometheus
+Instrumentator().instrument(app).expose(app)
+
+# Error Handlers
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from app.core.exceptions import XetherError
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
+
+@app.exception_handler(XetherError)
+async def xether_exception_handler(request: Request, exc: XetherError):
+    """Handle custom system exceptions."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": {
+                "message": exc.message,
+                "code": exc.code,
+                "details": exc.details,
+                "request_id": getattr(request.state, "request_id", None)
+            }
+        },
+    )
+
+@app.exception_handler(Exception)
+async def universal_exception_handler(request: Request, exc: Exception):
+    """Handle unhandled system exceptions."""
+    logger.exception(f"Unhandled exception occurred: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": {
+                "message": "An unexpected error occurred. Please contact support.",
+                "code": "INTERNAL_SERVER_ERROR",
+                "request_id": getattr(request.state, "request_id", None)
+            }
+        },
+    )
+
+# Include API routers
+
 app.include_router(api_router, prefix=settings.api_v1_prefix)
-
-
-@app.get("/health")
-async def health_check() -> dict[str, str]:
-    """Health check endpoint for liveness probe."""
-    return {"status": "healthy"}
-
-
-@app.get("/health/ready")
-async def readiness_check() -> dict[str, str]:
-    """Readiness check endpoint."""
-    # TODO: Add database and Redis connectivity checks
-    return {"status": "ready"}
+app.include_router(health.router, prefix="/health", tags=["health"])
 
 
 @app.get("/")
@@ -72,3 +109,4 @@ async def root() -> dict[str, str]:
         "version": settings.app_version,
         "docs": settings.docs_url,
     }
+
