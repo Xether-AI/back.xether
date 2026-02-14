@@ -7,7 +7,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core import get_settings, setup_logging
-from app.db import close_redis, init_redis
+from app.api.v1.api import api_router
+from app.core.config import get_settings
+from app.core.logging import setup_logging
+from app.db.redis import close_redis, init_redis
+
+# Initialize logging
+setup_logging()
 
 settings = get_settings()
 
@@ -16,7 +22,6 @@ settings = get_settings()
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan events."""
     # Startup
-    setup_logging()
     await init_redis()
     yield
     # Shutdown
@@ -29,10 +34,11 @@ app = FastAPI(
     version=settings.app_version,
     docs_url=settings.docs_url,
     redoc_url=settings.redoc_url,
+    openapi_url=f"{settings.api_v1_prefix}/openapi.json",
     lifespan=lifespan,
 )
 
-# Configure CORS
+# Set up CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -40,6 +46,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include API router
+app.include_router(api_router, prefix=settings.api_v1_prefix)
 
 
 @app.get("/health")
