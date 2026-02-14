@@ -35,8 +35,83 @@ async def close_redis() -> None:
         await redis_pool.disconnect()
 
 
+import json
+from functools import wraps
+from typing import Any, Callable, Optional
+
+
 async def get_redis() -> redis.Redis:  # type: ignore[type-arg]
     """Get Redis client instance."""
     if redis_client is None:
         raise RuntimeError("Redis client not initialized. Call init_redis() first.")
     return redis_client
+
+
+def cache(
+    key_prefix: str,
+    expire: int = 3600,
+    include_args: Optional[list[str]] = None,
+) -> Callable[..., Any]:
+    """
+    Decorator to cache function results in Redis.
+    :param key_prefix: Prefix for the cache key.
+    :param expire: Expiration time in seconds.
+    :param include_args: Specific argument names to include in the key. If None, all are used (dangerous).
+    """
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        import inspect
+        sig = inspect.signature(func)
+
+        @wraps(func)
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+            bound_args = sig.bind(*args, **kwargs)
+            bound_args.apply_defaults()
+            
+            if include_args:
+                key_parts = [str(bound_args.arguments.get(a)) for a in include_args]
+            else:
+                # Fallback to all args except common complex objects
+                key_parts = []
+                for name, val in bound_args.arguments.items():
+                    if name not in ["db", "session", "request", "background_tasks"]:
+                        key_parts.append(f"{name}={val}")
+            
+            cache_key = f"cache:{key_prefix}:{':'.join(key_parts)}"
+            
+            redis = await get_redis()
+            cached_val = await redis.get(cache_key)
+            
+            if cached_val:
+                try:
+                    return json.loads(cached_val)
+                except Exception:
+                    pass
+            
+            result = await func(*args, **kwargs)
+            
+            if result is not None:
+                # Handle Pydantic models or SQLAlchemy models if needed
+                # For now, assumes return is JSON serializable or has a __dict__
+                try:
+                    dump = json.dumps(result, default=str)
+                    await redis.setex(cache_key, expire, dump)
+                except Exception:
+                    pass
+            return result
+        return wrapper
+    return decorator
+
+
+
+async def invalidate_cache(key_prefix: str, *args: Any) -> None:
+    """Invalidate cache keys matching a prefix and arguments."""
+    redis = await get_redis()
+    pattern = f"cache:{key_prefix}:*"
+    if args:
+        arg_str = ":".join([str(a) for a in args])
+        pattern = f"cache:{key_prefix}:{arg_str}:*"
+        
+    keys = await redis.keys(pattern)
+    if keys:
+        await redis.delete(*keys)
+

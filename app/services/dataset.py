@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.base import Dataset, DatasetVersion
 from app.schemas.dataset import DatasetCreate, DatasetUpdate, DatasetVersionCreate
+from app.services.events import events
 
 
 async def create_dataset(db: AsyncSession, dataset_in: DatasetCreate) -> Dataset:
@@ -19,7 +20,11 @@ async def create_dataset(db: AsyncSession, dataset_in: DatasetCreate) -> Dataset
     db.add(db_dataset)
     await db.commit()
     await db.refresh(db_dataset)
+    
+    await events.publish("dataset.created", {"dataset_id": db_dataset.id, "project_id": dataset_in.project_id}, resource_id=db_dataset.id)
+    
     return db_dataset
+
 
 
 async def get_dataset(db: AsyncSession, dataset_id: int) -> Optional[Dataset]:
@@ -42,6 +47,9 @@ async def update_dataset(db: AsyncSession, db_dataset: Dataset, dataset_in: Data
     db.add(db_dataset)
     await db.commit()
     await db.refresh(db_dataset)
+    
+    await events.publish("dataset.updated", {"dataset_id": db_dataset.id}, resource_id=db_dataset.id)
+    
     return db_dataset
 
 
@@ -68,6 +76,9 @@ async def create_dataset_version(
     db.add(db_version)
     await db.commit()
     await db.refresh(db_version)
+    
+    await events.publish("dataset.version_created", {"dataset_id": dataset_id, "version_id": db_version.id}, resource_id=dataset_id)
+    
     return db_version
 
 

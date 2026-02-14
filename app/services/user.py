@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import get_password_hash, verify_password
 from app.models.base import User
 from app.schemas.auth import UserCreate
+from app.db.redis import cache, invalidate_cache
 
 
 async def get_user_by_email(db: AsyncSession, email: str) -> Optional[User]:
@@ -15,6 +16,7 @@ async def get_user_by_email(db: AsyncSession, email: str) -> Optional[User]:
     return result.scalars().first()
 
 
+@cache("user", expire=600, include_args=["user_id"])
 async def get_user_by_id(db: AsyncSession, user_id: int) -> Optional[User]:
     """Get a user by ID."""
     result = await db.execute(select(User).where(User.id == user_id))
@@ -64,6 +66,10 @@ async def update_user(db: AsyncSession, db_user: User, user_in: any) -> User:  #
     db.add(db_user)
     await db.commit()
     await db.refresh(db_user)
+    
+    # Invalidate cache
+    await invalidate_cache("user", db_user.id)
+    
     return db_user
 
 
