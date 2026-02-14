@@ -42,7 +42,10 @@ class Settings(BaseSettings):
     redis_max_connections: int = Field(default=50, alias="REDIS_MAX_CONNECTIONS")
 
     # JWT
-    jwt_secret_key: str = Field(..., alias="JWT_SECRET_KEY")
+    jwt_secret_key: str = Field(
+        default="dev-secret-key-change-in-production-min-32-chars",
+        alias="JWT_SECRET_KEY",
+    )
     jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
     access_token_expire_minutes: int = Field(default=30, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
     refresh_token_expire_days: int = Field(default=7, alias="REFRESH_TOKEN_EXPIRE_DAYS")
@@ -64,7 +67,9 @@ class Settings(BaseSettings):
         """Parse CORS origins from comma-separated string or list."""
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",")]
-        return v
+        elif isinstance(v, list):
+            return v
+        return ["http://localhost:3000", "http://localhost:8000"]
 
     @property
     def database_url_str(self) -> str:

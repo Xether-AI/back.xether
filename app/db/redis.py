@@ -10,7 +10,7 @@ settings = get_settings()
 
 # Redis connection pool
 redis_pool: redis.ConnectionPool | None = None
-redis_client: redis.Redis[Any] | None = None
+redis_client: redis.Redis | None = None  # type: ignore[type-arg]
 
 
 async def init_redis() -> None:
@@ -35,7 +35,7 @@ async def close_redis() -> None:
         await redis_pool.disconnect()
 
 
-async def get_redis() -> redis.Redis[Any]:
+async def get_redis() -> redis.Redis:  # type: ignore[type-arg]
     """Get Redis client instance."""
     if redis_client is None:
         raise RuntimeError("Redis client not initialized. Call init_redis() first.")
