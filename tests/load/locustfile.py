@@ -43,4 +43,5 @@ class XetherUser(HttpUser):
     def get_user_profile(self):
         """Simulate profile access."""
         headers = {"Authorization": f"Bearer {self.token}"}
-        self.client.get("/api/v1/auth/me", headers=headers, name="/auth/me")
+        self.client.get("/api/v1/users/me", headers=headers, name="/users/me")
+
