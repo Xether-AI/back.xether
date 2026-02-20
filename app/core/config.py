@@ -61,6 +61,13 @@ class Settings(BaseSettings):
     api_key_header: str = Field(default="X-API-Key", alias="API_KEY_HEADER")
     rate_limit_per_minute: int = Field(default=60, alias="RATE_LIMIT_PER_MINUTE")
 
+    # NATS Message Bus
+    nats_servers: list[str] = Field(
+        default=["nats://localhost:4222"],
+        alias="NATS_SERVERS",
+    )
+    nats_cluster_id: str = Field(default="xether-cluster", alias="NATS_CLUSTER_ID")
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v: Any) -> list[str]:
@@ -70,6 +77,16 @@ class Settings(BaseSettings):
         elif isinstance(v, list):
             return v
         return ["http://localhost:3000", "http://localhost:8000"]
+
+    @field_validator("nats_servers", mode="before")
+    @classmethod
+    def parse_nats_servers(cls, v: Any) -> list[str]:
+        """Parse NATS servers from comma-separated string or list."""
+        if isinstance(v, str):
+            return [server.strip() for server in v.split(",")]
+        elif isinstance(v, list):
+            return v
+        return ["nats://localhost:4222"]
 
     @property
     def database_url_str(self) -> str:

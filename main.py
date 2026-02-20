@@ -15,11 +15,18 @@ from app.api.v1.endpoints import health
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.db.redis import close_redis, init_redis
+from app.core.events import get_event_bus, close_event_bus
+from app.services.pipeline_consumer import start_consumer
+import asyncio
+import logging
 
 # Initialize logging
 setup_logging()
 
 settings = get_settings()
+
+# Get logger for this module
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -27,8 +34,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan events."""
     # Startup
     await init_redis()
+    
+    # Initialize NATS event bus and start consumer
+    try:
+        await get_event_bus()
+        asyncio.create_task(start_consumer())
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to initialize NATS event bus: {e}")
+    
     yield
+    
     # Shutdown
+    await close_event_bus()
     await close_redis()
 
 
