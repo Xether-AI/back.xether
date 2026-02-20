@@ -22,6 +22,11 @@ redis>=5.0.1
 # Message Bus
 nats-py>=2.6.0
 
+# gRPC
+grpcio>=1.60.0
+grpcio-tools>=1.60.0
+protobuf>=4.25.0
+
 # HTTP Client
 httpx>=0.26.0
 

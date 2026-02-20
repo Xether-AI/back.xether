@@ -16,6 +16,7 @@ from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.db.redis import close_redis, init_redis
 from app.core.events import get_event_bus, close_event_bus
+from app.core.grpc_clients import get_artifact_storage_client, close_artifact_storage_client
 from app.services.pipeline_consumer import start_consumer
 import asyncio
 import logging
@@ -40,12 +41,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         await get_event_bus()
         asyncio.create_task(start_consumer())
     except Exception as e:
-        logger = logging.getLogger(__name__)
         logger.error(f"Failed to initialize NATS event bus: {e}")
+    
+    # Initialize Artifact Storage gRPC client
+    try:
+        await get_artifact_storage_client()
+    except Exception as e:
+        logger.warning(f"Failed to initialize Artifact Storage client: {e}")
+        logger.warning("Artifact endpoints will not be available")
     
     yield
     
     # Shutdown
+    await close_artifact_storage_client()
     await close_event_bus()
     await close_redis()
 

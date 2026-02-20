@@ -68,6 +68,11 @@ class Settings(BaseSettings):
     )
     nats_cluster_id: str = Field(default="xether-cluster", alias="NATS_CLUSTER_ID")
 
+    # Artifact Storage Service
+    artifact_storage_host: str = Field(default="localhost", alias="ARTIFACT_STORAGE_HOST")
+    artifact_storage_grpc_port: int = Field(default=50051, alias="ARTIFACT_STORAGE_GRPC_PORT")
+    artifact_storage_http_port: int = Field(default=8080, alias="ARTIFACT_STORAGE_HTTP_PORT")
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v: Any) -> list[str]:

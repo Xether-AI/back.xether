@@ -1,0 +1,2 @@
+# This directory will contain generated gRPC stubs
+# Run: bash scripts/generate_grpc_stubs.sh
