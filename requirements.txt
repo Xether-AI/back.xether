@@ -19,6 +19,9 @@ python-multipart>=0.0.6
 # Caching
 redis>=5.0.1
 
+# Message Bus
+nats-py>=2.6.0
+
 # HTTP Client
 httpx>=0.26.0
 
