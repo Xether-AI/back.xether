@@ -3,14 +3,20 @@
 import json
 from datetime import datetime
 from typing import Any, Dict, Optional
-from app.db.redis import get_redis
+import logging
+
+# Import the new NATS event bus
+from app.core.events import get_event_bus
+
+logger = logging.getLogger(__name__)
 
 
 class EventBus:
-    """Redis-backed simple event bus for internal orchestration."""
+    """
+    Event bus wrapper for backward compatibility.
+    Now uses NATS instead of Redis Streams.
+    """
     
-    STREAM_NAME = "xether:events"
-
     @staticmethod
     async def publish(
         event_type: str,
@@ -18,21 +24,37 @@ class EventBus:
         resource_id: Optional[int] = None
     ) -> str:
         """
-        Publish an event to the internal stream.
-        Returns the message ID.
+        Publish an event to NATS.
+        
+        Args:
+            event_type: Event type (e.g., "pipeline.executed")
+            payload: Event payload
+            resource_id: Optional resource ID
+            
+        Returns:
+            Message ID (for compatibility, returns "ok")
         """
-        redis = await get_redis()
+        # Get NATS event bus
+        nats_bus = await get_event_bus()
+        
+        # Convert event_type to NATS subject format
+        # "pipeline.executed" -> "backend.pipeline.executed"
+        subject = f"backend.{event_type}"
+        
+        # Prepare event data
         event_data = {
             "type": event_type,
-            "payload": json.dumps(payload),
-            "resource_id": str(resource_id) if resource_id else "",
+            "payload": payload,
+            "resource_id": resource_id,
             "timestamp": datetime.utcnow().isoformat()
         }
         
-        # Using Redis Streams for persistence and multiple consumer support
-        message_id = await redis.xadd(EventBus.STREAM_NAME, event_data)
-        return str(message_id)
+        # Publish to NATS
+        await nats_bus.publish(subject, event_data)
+        logger.debug(f"Published event {event_type} to {subject}")
+        
+        return "ok"
 
 
-# Global instance
+# Global instance for backward compatibility
 events = EventBus()
