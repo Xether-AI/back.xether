@@ -51,7 +51,8 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = Field(default=7, alias="REFRESH_TOKEN_EXPIRE_DAYS")
 
     # CORS
-    cors_origins: list[str] = Field(
+    # Comma-separated list of allowed origins
+    cors_origins: Any = Field(
         default=["http://localhost:3000", "http://localhost:8000"],
         alias="CORS_ORIGINS",
     )
@@ -62,7 +63,7 @@ class Settings(BaseSettings):
     rate_limit_per_minute: int = Field(default=60, alias="RATE_LIMIT_PER_MINUTE")
 
     # NATS Message Bus
-    nats_servers: list[str] = Field(
+    nats_servers: Any = Field(
         default=["nats://localhost:4222"],
         alias="NATS_SERVERS",
     )
