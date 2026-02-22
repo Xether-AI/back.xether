@@ -1,30 +1,19 @@
-# Multi-stage build for production optimization
+# builder stage
 FROM python:3.11-slim as builder
-
-# Set working directory
 WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     postgresql-client \
+    libc-dev \
     && rm -rf /var/lib/apt/lists/*
-
-# Copy dependency files
 COPY pyproject.toml ./
-
-# Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -e .
 
-# Production stage
+# production stage
 FROM python:3.11-slim
-
-# Set working directory
 WORKDIR /app
-
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
     curl \
     && rm -rf /var/lib/apt/lists/*
