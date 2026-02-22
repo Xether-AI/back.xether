@@ -7,7 +7,7 @@ from typing import Optional
 from app.core.grpc_clients import get_artifact_storage_client
 from app.grpc.clients.artifact_storage_client import ArtifactStorageClient
 from app.api import deps
-from app.models.user import User
+from app.models.base import User
 
 router = APIRouter()
 

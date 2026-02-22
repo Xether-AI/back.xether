@@ -51,9 +51,9 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = Field(default=7, alias="REFRESH_TOKEN_EXPIRE_DAYS")
 
     # CORS
-    # Comma-separated list of allowed origins
+    # Handles both JSON lists and comma-separated strings
     cors_origins: Any = Field(
-        default=["http://localhost:3000", "http://localhost:8000"],
+        default="http://localhost:3000,http://localhost:8000",
         alias="CORS_ORIGINS",
     )
     cors_allow_credentials: bool = Field(default=True, alias="CORS_ALLOW_CREDENTIALS")
@@ -64,7 +64,7 @@ class Settings(BaseSettings):
 
     # NATS Message Bus
     nats_servers: Any = Field(
-        default=["nats://localhost:4222"],
+        default="nats://localhost:4222",
         alias="NATS_SERVERS",
     )
     nats_cluster_id: str = Field(default="xether-cluster", alias="NATS_CLUSTER_ID")
@@ -74,23 +74,38 @@ class Settings(BaseSettings):
     artifact_storage_grpc_port: int = Field(default=50051, alias="ARTIFACT_STORAGE_GRPC_PORT")
     artifact_storage_http_port: int = Field(default=8080, alias="ARTIFACT_STORAGE_HTTP_PORT")
 
-    @field_validator("cors_origins", mode="before")
+    @field_validator("cors_origins", mode="plain")
     @classmethod
-    def parse_cors_origins(cls, v: Any) -> list[str]:
-        """Parse CORS origins from comma-separated string or list."""
+    def parse_cors_origins(cls, v: Any) -> Any:
+        """Parse CORS origins with robustness against pydantic-settings parsing."""
         if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        elif isinstance(v, list):
+            # Clean up potential shell quotes
+            v = v.strip("'").strip('"')
+            if v.startswith("[") and v.endswith("]"):
+                try:
+                    import json
+                    return json.loads(v)
+                except Exception:
+                    pass
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        if isinstance(v, list):
             return v
         return ["http://localhost:3000", "http://localhost:8000"]
 
-    @field_validator("nats_servers", mode="before")
+    @field_validator("nats_servers", mode="plain")
     @classmethod
-    def parse_nats_servers(cls, v: Any) -> list[str]:
-        """Parse NATS servers from comma-separated string or list."""
+    def parse_nats_servers(cls, v: Any) -> Any:
+        """Parse NATS servers with robustness."""
         if isinstance(v, str):
-            return [server.strip() for server in v.split(",")]
-        elif isinstance(v, list):
+            v = v.strip("'").strip('"')
+            if v.startswith("[") and v.endswith("]"):
+                try:
+                    import json
+                    return json.loads(v)
+                except Exception:
+                    pass
+            return [server.strip() for server in v.split(",") if server.strip()]
+        if isinstance(v, list):
             return v
         return ["nats://localhost:4222"]
 
@@ -108,4 +123,5 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     """Get cached settings instance."""
+    # print("DEBUG: Loading settings...")
     return Settings()  # type: ignore[call-arg]
