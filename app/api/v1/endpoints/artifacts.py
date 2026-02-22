@@ -6,7 +6,7 @@ from typing import Optional
 
 from app.core.grpc_clients import get_artifact_storage_client
 from app.grpc.clients.artifact_storage_client import ArtifactStorageClient
-from app.api.dependencies import get_current_user
+from app.api import deps
 from app.models.user import User
 
 router = APIRouter()
@@ -64,7 +64,7 @@ class ArtifactMetadata(BaseModel):
 @router.post("/upload", response_model=UploadURLResponse, status_code=200)
 async def request_upload_url(
     request: UploadURLRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(deps.get_current_user),
     client: ArtifactStorageClient = Depends(get_artifact_storage_client)
 ):
     """
@@ -98,7 +98,7 @@ async def request_upload_url(
 async def complete_upload(
     artifact_id: str,
     request: CompleteUploadRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(deps.get_current_user),
     client: ArtifactStorageClient = Depends(get_artifact_storage_client)
 ):
     """
@@ -129,7 +129,7 @@ async def complete_upload(
 async def get_download_url(
     artifact_id: str,
     expires_in_seconds: int = Query(default=3600, description="URL expiration (seconds)"),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(deps.get_current_user),
     client: ArtifactStorageClient = Depends(get_artifact_storage_client)
 ):
     """
@@ -153,7 +153,7 @@ async def get_download_url(
 @router.get("/{artifact_id}", response_model=ArtifactMetadata)
 async def get_artifact_metadata(
     artifact_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(deps.get_current_user),
     client: ArtifactStorageClient = Depends(get_artifact_storage_client)
 ):
     """
@@ -173,7 +173,7 @@ async def get_artifact_metadata(
 async def list_artifacts(
     project_id: Optional[str] = Query(None, description="Filter by project ID"),
     pipeline_id: Optional[str] = Query(None, description="Filter by pipeline ID"),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(deps.get_current_user),
     client: ArtifactStorageClient = Depends(get_artifact_storage_client)
 ):
     """

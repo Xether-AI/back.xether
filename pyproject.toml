@@ -38,8 +38,12 @@ dependencies = [
     # HTTP Client
     "httpx>=0.26.0",
 
-    # Logging
+    # Observability
+    "prometheus-fastapi-instrumentator>=6.1.0",
     "python-json-logger>=2.0.7",
+
+    # Task Queue
+    "celery>=5.3.6",
 
     # Message Bus
     "nats-py>=2.6.0",
@@ -137,3 +141,7 @@ minversion = "7.0"
 addopts = "-ra -q --strict-markers"
 testpaths = ["tests"]
 asyncio_mode = "auto"
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*", "proto*", "migrations*"]
+namespaces = false
