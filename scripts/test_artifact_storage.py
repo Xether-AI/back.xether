@@ -24,7 +24,7 @@ async def test_artifact_storage():
         print("\nTesting upload URL generation...")
         result = await client.get_upload_url(
             name="test-artifact.txt",
-            bucket="test-bucket",
+            bucket="artifacts",
             key="test/artifact.txt",
             content_type="text/plain",
             expires_in_seconds=3600,

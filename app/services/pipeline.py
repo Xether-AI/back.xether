@@ -65,6 +65,10 @@ async def delete_pipeline(db: AsyncSession, pipeline_id: int) -> bool:
 
 async def trigger_pipeline_execution(db: AsyncSession, pipeline_id: int, meta_data: Optional[dict] = None) -> PipelineExecution:
     """Trigger a new pipeline execution."""
+    pipeline = await get_pipeline(db, pipeline_id)
+    if not pipeline:
+        raise ValueError(f"Pipeline {pipeline_id} not found")
+
     db_execution = PipelineExecution(
         pipeline_id=pipeline_id,
         status="pending",
@@ -74,7 +78,20 @@ async def trigger_pipeline_execution(db: AsyncSession, pipeline_id: int, meta_da
     await db.commit()
     await db.refresh(db_execution)
     
-    await events.publish("pipeline.executed", {"pipeline_id": pipeline_id, "execution_id": db_execution.id}, resource_id=pipeline_id)
+    # Prepare task payload for worker
+    task_payload = {
+        "execution_id": str(db_execution.id),
+        "pipeline_id": pipeline_id,
+        "pipeline": {
+            "name": pipeline.name,
+            "config": pipeline.config,
+            # Add other fields if needed by PipelineExecutor
+        },
+        "meta_data": meta_data
+    }
+    
+    await events.publish("pipeline.tasks", task_payload)
+    logger.info(f"Triggered pipeline execution {db_execution.id} on subject pipeline.tasks")
     
     return db_execution
 
