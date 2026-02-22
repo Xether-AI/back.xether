@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package artifact.v1;
+
+option go_package = "github.com/xether-ai/artifact-storage/api/proto/v1;artifactv1";
+
+import "google/protobuf/timestamp.proto";
+
+service ArtifactService {
+    rpc GetUploadURL(UploadURLRequest) returns (UploadURLResponse);
+    rpc CompleteUpload(CompleteUploadRequest) returns (CompleteUploadResponse);
+    rpc GetDownloadURL(DownloadURLRequest) returns (DownloadURLResponse);
+    rpc GetMetadata(GetMetadataRequest) returns (Artifact);
+    rpc ListArtifacts(ListArtifactsRequest) returns (ListArtifactsResponse);
+}
+
+message Artifact {
+    string id = 1;
+    string name = 2;
+    string bucket = 3;
+    string key = 4;
+    int64 size = 5;
+    string content_type = 6;
+    string checksum_sha256 = 7;
+    optional string version_id = 8;
+    optional string pipeline_id = 9;
+    optional string execution_id = 10;
+    optional string project_id = 11;
+    google.protobuf.Timestamp created_at = 12;
+    google.protobuf.Timestamp updated_at = 13;
+}
+
+message UploadURLRequest {
+    string name = 1;
+    string bucket = 2;
+    string key = 3;
+    string content_type = 4;
+    int32 expires_in_seconds = 5;
+    optional string pipeline_id = 6;
+    optional string execution_id = 7;
+    optional string project_id = 8;
+}
+
+message UploadURLResponse {
+    string artifact_id = 1;
+    string upload_url = 2;
+}
+
+message CompleteUploadRequest {
+    string artifact_id = 1;
+    int64 size = 2;
+    string checksum = 3;
+    string version_id = 4;
+}
+
+message CompleteUploadResponse {
+    string status = 1;
+}
+
+message DownloadURLRequest {
+    string artifact_id = 1;
+    int32 expires_in_seconds = 2;
+}
+
+message DownloadURLResponse {
+    string download_url = 1;
+}
+
+message GetMetadataRequest {
+    string artifact_id = 1;
+}
+
+message ListArtifactsRequest {
+    optional string project_id = 1;
+    optional string pipeline_id = 2;
+}
+
+message ListArtifactsResponse {
+    repeated Artifact artifacts = 1;
+}
