@@ -16,7 +16,6 @@ async def get_user_by_email(db: AsyncSession, email: str) -> Optional[User]:
     return result.scalars().first()
 
 
-@cache("user", expire=600, include_args=["user_id"])
 async def get_user_by_id(db: AsyncSession, user_id: int) -> Optional[User]:
     """Get a user by ID."""
     result = await db.execute(select(User).where(User.id == user_id))

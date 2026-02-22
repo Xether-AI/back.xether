@@ -58,9 +58,26 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     
     async def dispatch(self, request: Request, call_next) -> Response:
         response = await call_next(request)
+        path = request.url.path
+        
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-        response.headers["Content-Security-Policy"] = "default-src 'self'"
+        
+        # Define CSP
+        if path in ["/docs", "/redoc", "/api/v1/openapi.json"]:
+            # Documentation needs CDN access and inline scripts/styles
+            csp = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net; "
+                "style-src 'self' 'unsafe-inline' cdn.jsdelivr.net; "
+                "img-src 'self' data: fastly.jsdelivr.net cdn.jsdelivr.net fastapi.tiangolo.com; "
+                "connect-src 'self'"
+            )
+        else:
+            # Strict CSP for API endpoints
+            csp = "default-src 'self'"
+            
+        response.headers["Content-Security-Policy"] = csp
         return response
