@@ -84,18 +84,30 @@ def cache(
             if cached_val:
                 try:
                     return json.loads(cached_val)
-                except Exception:
+                except (json.JSONDecodeError, TypeError):
+                    # If corrupted or not JSON, ignore and fetch fresh
                     pass
             
             result = await func(*args, **kwargs)
             
             if result is not None:
-                # Handle Pydantic models or SQLAlchemy models if needed
-                # For now, assumes return is JSON serializable or has a __dict__
+                # Only cache if it's potentially JSON serializable
+                # We avoid using str(result) as a fallback because it leads to
+                # caching strings like "<Team 1>" which break logic expecting objects.
                 try:
-                    dump = json.dumps(result, default=str)
+                    # Generic check for Pydantic/SQLAlchemy models or dicts
+                    if hasattr(result, "model_dump"): # Pydantic v2
+                        dump_data = result.model_dump(mode="json")
+                    elif hasattr(result, "__dict__"):
+                        # Basic dict fallback, being careful with SQLAlchemy state
+                        dump_data = {k: v for k, v in result.__dict__.items() if not k.startswith("_")}
+                    else:
+                        dump_data = result
+                        
+                    dump = json.dumps(dump_data, default=str)
                     await redis.setex(cache_key, expire, dump)
                 except Exception:
+                    # If we can't safely serialize, don't cache
                     pass
             return result
         return wrapper

@@ -35,7 +35,6 @@ async def create_team(db: AsyncSession, team_in: TeamCreate, owner_id: int) -> T
     return db_team
 
 
-@cache("team", expire=1800, include_args=["team_id"])
 async def get_team(db: AsyncSession, team_id: int) -> Optional[Team]:
     """Get a team by ID."""
     result = await db.execute(select(Team).where(Team.id == team_id))

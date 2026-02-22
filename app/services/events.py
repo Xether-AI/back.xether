@@ -38,8 +38,12 @@ class EventBus:
         nats_bus = await get_event_bus()
         
         # Convert event_type to NATS subject format
-        # "pipeline.executed" -> "backend.pipeline.executed"
-        subject = f"backend.{event_type}"
+        # If it already starts with a known prefix, use it as is
+        if event_type.startswith(("backend.", "pipeline.")):
+            subject = event_type
+        else:
+            # "pipeline.executed" -> "backend.pipeline.executed"
+            subject = f"backend.{event_type}"
         
         # Prepare event data
         event_data = {
