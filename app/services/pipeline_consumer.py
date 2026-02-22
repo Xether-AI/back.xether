@@ -8,7 +8,7 @@ import logging
 
 from app.core.events import get_event_bus
 from app.db.session import AsyncSessionLocal
-from app.models.pipeline import PipelineExecution
+from app.models.base import PipelineExecution
 
 logger = logging.getLogger(__name__)
 
