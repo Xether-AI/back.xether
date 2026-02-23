@@ -73,6 +73,7 @@ class Settings(BaseSettings):
     artifact_storage_host: str = Field(default="localhost", alias="ARTIFACT_STORAGE_HOST")
     artifact_storage_grpc_port: int = Field(default=50051, alias="ARTIFACT_STORAGE_GRPC_PORT")
     artifact_storage_http_port: int = Field(default=8080, alias="ARTIFACT_STORAGE_HTTP_PORT")
+    artifact_storage_api_key: str = Field(default="dev-api-key", alias="ARTIFACT_STORAGE_API_KEY")
 
     @field_validator("cors_origins", mode="plain")
     @classmethod
