@@ -19,15 +19,17 @@ class ArtifactStorageClient:
     - Listing artifacts
     """
     
-    def __init__(self, host: str, port: int):
+    def __init__(self, host: str, port: int, api_key: str):
         """
         Initialize Artifact Storage gRPC client.
         
         Args:
             host: Artifact Storage service hostname
             port: gRPC port (typically 50051)
+            api_key: Admin API Key for authentication
         """
         self.address = f"{host}:{port}"
+        self.api_key = api_key
         self.channel: Optional[grpc.aio.Channel] = None
         self.stub = None
         
@@ -90,7 +92,8 @@ class ArtifactStorageClient:
                 project_id=project_id or ""
             )
             
-            response = await self.stub.GetUploadURL(request)
+            metadata = (("x-api-key", self.api_key),)
+            response = await self.stub.GetUploadURL(request, metadata=metadata)
             
             return {
                 "artifact_id": response.artifact_id,
@@ -132,7 +135,8 @@ class ArtifactStorageClient:
                 version_id=version_id
             )
             
-            response = await self.stub.CompleteUpload(request)
+            metadata = (("x-api-key", self.api_key),)
+            response = await self.stub.CompleteUpload(request, metadata=metadata)
             
             return response.status == "completed"
         except grpc.RpcError as e:
@@ -165,7 +169,8 @@ class ArtifactStorageClient:
                 expires_in_seconds=expires_in_seconds
             )
             
-            response = await self.stub.GetDownloadURL(request)
+            metadata = (("x-api-key", self.api_key),)
+            response = await self.stub.GetDownloadURL(request, metadata=metadata)
             
             return response.download_url
         except grpc.RpcError as e:
@@ -190,7 +195,8 @@ class ArtifactStorageClient:
             
             request = artifact_pb2.GetMetadataRequest(artifact_id=artifact_id)
             
-            response = await self.stub.GetMetadata(request)
+            metadata = (("x-api-key", self.api_key),)
+            response = await self.stub.GetMetadata(request, metadata=metadata)
             
             return {
                 "id": response.id,
@@ -237,7 +243,8 @@ class ArtifactStorageClient:
                 pipeline_id=pipeline_id or ""
             )
             
-            response = await self.stub.ListArtifacts(request)
+            metadata = (("x-api-key", self.api_key),)
+            response = await self.stub.ListArtifacts(request, metadata=metadata)
             
             artifacts = []
             for artifact in response.artifacts:

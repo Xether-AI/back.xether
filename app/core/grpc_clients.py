@@ -21,14 +21,22 @@ async def get_artifact_storage_client() -> ArtifactStorageClient:
     """
     global _artifact_storage_client
     
-    if _artifact_storage_client is None:
+    # If client doesn't exist or isn't connected, initialize it
+    if _artifact_storage_client is None or _artifact_storage_client.stub is None:
         settings = get_settings()
-        _artifact_storage_client = ArtifactStorageClient(
+        client = ArtifactStorageClient(
             host=settings.artifact_storage_host,
-            port=settings.artifact_storage_grpc_port
+            port=settings.artifact_storage_grpc_port,
+            api_key=settings.artifact_storage_api_key
         )
-        await _artifact_storage_client.connect()
-        logger.info("Artifact Storage gRPC client initialized")
+        try:
+            await client.connect()
+            _artifact_storage_client = client
+            logger.info("Artifact Storage gRPC client initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize Artifact Storage gRPC client: {e}")
+            _artifact_storage_client = None
+            raise
     
     return _artifact_storage_client
 
