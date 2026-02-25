@@ -523,6 +523,99 @@ class ArtifactStorageClient:
             logger.error(f"gRPC error restoring artifact: {e.code()} - {e.details()}")
             raise
     
+    async def set_retention_policy(self, project_id: str, max_bytes: int, ttl_days: int) -> Dict[str, Any]:
+        """
+        Set retention policy for a project.
+        
+        Args:
+            project_id: Project ID to set policy for
+            max_bytes: Maximum storage bytes allowed
+            ttl_days: Default TTL for artifacts in days
+            
+        Returns:
+            Dict with policy status and details
+        """
+        if not self.stub:
+            raise RuntimeError("Client not connected. Call connect() first.")
+        
+        try:
+            from app.grpc.generated import artifact_pb2
+            
+            request = artifact_pb2.SetRetentionPolicyRequest(
+                project_id=project_id,
+                max_bytes=max_bytes,
+                ttl_days=ttl_days
+            )
+            
+            metadata = (("x-api-key", self.api_key),)
+            response = await self.stub.SetRetentionPolicy(request, metadata=metadata)
+            
+            return {
+                "status": response.status,
+                "project_id": response.project_id,
+                "max_bytes": response.max_bytes if response.HasField("max_bytes") else None,
+                "ttl_days": response.ttl_days if response.HasField("ttl_days") else None
+            }
+        except grpc.RpcError as e:
+            logger.error(f"gRPC error setting retention policy: {e.code()} - {e.details()}")
+            raise
+    
+    async def get_retention_policy(self, project_id: str) -> Dict[str, Any]:
+        """
+        Get retention policy for a project.
+        
+        Args:
+            project_id: Project ID to get policy for
+            
+        Returns:
+            Dict with policy details
+        """
+        if not self.stub:
+            raise RuntimeError("Client not connected. Call connect() first.")
+        
+        try:
+            from app.grpc.generated import artifact_pb2
+            
+            request = artifact_pb2.GetRetentionPolicyRequest(project_id=project_id)
+            
+            metadata = (("x-api-key", self.api_key),)
+            response = await self.stub.GetRetentionPolicy(request, metadata=metadata)
+            
+            return {
+                "project_id": response.project_id,
+                "max_bytes": response.max_bytes if response.HasField("max_bytes") else None,
+                "ttl_days": response.ttl_days if response.HasField("ttl_days") else None,
+                "current_usage": response.current_usage if response.HasField("current_usage") else None
+            }
+        except grpc.RpcError as e:
+            logger.error(f"gRPC error getting retention policy: {e.code()} - {e.details()}")
+            raise
+    
+    async def get_storage_classes(self) -> Dict[str, Any]:
+        """
+        Get available storage classes.
+        
+        Returns:
+            Dict with available storage classes
+        """
+        if not self.stub:
+            raise RuntimeError("Client not connected. Call connect() first.")
+        
+        try:
+            from app.grpc.generated import artifact_pb2
+            
+            request = artifact_pb2.GetStorageClassesRequest()
+            
+            metadata = (("x-api-key", self.api_key),)
+            response = await self.stub.GetStorageClasses(request, metadata=metadata)
+            
+            return {
+                "storage_classes": list(response.storage_classes)
+            }
+        except grpc.RpcError as e:
+            logger.error(f"gRPC error getting storage classes: {e.code()} - {e.details()}")
+            raise
+    
     async def close(self):
         """Close gRPC connection."""
         if self.channel:
