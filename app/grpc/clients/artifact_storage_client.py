@@ -321,6 +321,138 @@ class ArtifactStorageClient:
             logger.error(f"gRPC error validating checksum: {e.code()} - {e.details()}")
             raise
     
+    async def initiate_multipart_upload(self, name: str, bucket: str, key: str, content_type: str = None, 
+                                   pipeline_id: str = None, execution_id: str = None, 
+                                   project_id: str = None, retention_days: int = None,
+                                   storage_class: str = None) -> Dict[str, Any]:
+        """
+        Initiate multipart upload for large files.
+        
+        Args:
+            name: Artifact name
+            bucket: S3 bucket name
+            key: S3 object key
+            content_type: MIME type
+            pipeline_id: Associated pipeline ID
+            execution_id: Associated execution ID
+            project_id: Associated project ID
+            retention_days: Retention period in days
+            storage_class: S3 storage class
+            
+        Returns:
+            Dict with upload ID and artifact ID
+        """
+        if not self.stub:
+            raise RuntimeError("Client not connected. Call connect() first.")
+        
+        try:
+            from app.grpc.generated import artifact_pb2
+            
+            request = artifact_pb2.InitiateMultipartRequest(
+                name=name,
+                bucket=bucket,
+                key=key,
+                content_type=content_type or "application/octet-stream",
+                pipeline_id=pipeline_id,
+                execution_id=execution_id,
+                project_id=project_id,
+                retention_days=retention_days,
+                storage_class=storage_class
+            )
+            
+            metadata = (("x-api-key", self.api_key),)
+            response = await self.stub.InitiateMultipart(request, metadata=metadata)
+            
+            return {
+                "artifact_id": response.artifact_id,
+                "upload_id": response.upload_id
+            }
+        except grpc.RpcError as e:
+            logger.error(f"gRPC error initiating multipart upload: {e.code()} - {e.details()}")
+            raise
+    
+    async def get_multipart_part_url(self, artifact_id: str, upload_id: str, part_number: int, 
+                                   expires_in: int = 3600) -> Dict[str, Any]:
+        """
+        Get pre-signed URL for multipart upload part.
+        
+        Args:
+            artifact_id: Artifact ID
+            upload_id: Multipart upload ID
+            part_number: Part number
+            expires_in: URL expiration in seconds
+            
+        Returns:
+            Dict with part upload URL
+        """
+        if not self.stub:
+            raise RuntimeError("Client not connected. Call connect() first.")
+        
+        try:
+            from app.grpc.generated import artifact_pb2
+            
+            request = artifact_pb2.MultipartPartURLRequest(
+                artifact_id=artifact_id,
+                upload_id=upload_id,
+                part_number=part_number,
+                expires_in=expires_in
+            )
+            
+            metadata = (("x-api-key", self.api_key),)
+            response = await self.stub.GetMultipartPartURL(request, metadata=metadata)
+            
+            return {
+                "part_url": response.part_url,
+                "expires_at": response.expires_at.ToDatetime().isoformat() if response.HasField("expires_at") else None
+            }
+        except grpc.RpcError as e:
+            logger.error(f"gRPC error getting multipart part URL: {e.code()} - {e.details()}")
+            raise
+    
+    async def complete_multipart_upload(self, artifact_id: str, upload_id: str, parts: list) -> Dict[str, Any]:
+        """
+        Complete multipart upload.
+        
+        Args:
+            artifact_id: Artifact ID
+            upload_id: Multipart upload ID
+            parts: List of completed parts with ETags
+            
+        Returns:
+            Dict with completion status and version info
+        """
+        if not self.stub:
+            raise RuntimeError("Client not connected. Call connect() first.")
+        
+        try:
+            from app.grpc.generated import artifact_pb2
+            
+            # Convert parts to protobuf format
+            grpc_parts = []
+            for part in parts:
+                grpc_part = artifact_pb2.CompletePart(
+                    part_number=part.get("part_number"),
+                    etag=part.get("etag")
+                )
+                grpc_parts.append(grpc_part)
+            
+            request = artifact_pb2.CompleteMultipartRequest(
+                artifact_id=artifact_id,
+                upload_id=upload_id,
+                parts=grpc_parts
+            )
+            
+            metadata = (("x-api-key", self.api_key),)
+            response = await self.stub.CompleteMultipart(request, metadata=metadata)
+            
+            return {
+                "status": "completed",
+                "version_id": response.version_id if response.HasField("version_id") else None
+            }
+        except grpc.RpcError as e:
+            logger.error(f"gRPC error completing multipart upload: {e.code()} - {e.details()}")
+            raise
+    
     async def close(self):
         """Close gRPC connection."""
         if self.channel:
