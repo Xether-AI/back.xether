@@ -84,3 +84,31 @@ async def test_list_pipeline_executions_unit():
     assert len(executions) == 1
     assert executions[0].status == "success"
 
+@pytest.mark.asyncio
+async def test_get_pipeline_execution_unit():
+    """Test getting a specific pipeline execution."""
+    mock_db = AsyncMock()
+    mock_result = MagicMock()
+    mock_execution = PipelineExecution(id=1, pipeline_id=1, status="completed")
+    mock_result.scalars.return_value.first.return_value = mock_execution
+    mock_db.execute.return_value = mock_result
+    
+    execution = await pipeline_service.get_pipeline_execution(mock_db, execution_id=1)
+    
+    assert execution is not None
+    assert execution.id == 1
+    assert execution.status == "completed"
+    assert execution.pipeline_id == 1
+
+@pytest.mark.asyncio
+async def test_get_pipeline_execution_not_found_unit():
+    """Test getting a non-existent pipeline execution."""
+    mock_db = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.first.return_value = None
+    mock_db.execute.return_value = mock_result
+    
+    execution = await pipeline_service.get_pipeline_execution(mock_db, execution_id=999)
+    
+    assert execution is None
+

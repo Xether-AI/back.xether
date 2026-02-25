@@ -6,6 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.base import Pipeline, PipelineExecution
 from app.schemas.pipeline import PipelineCreate, PipelineUpdate
 from app.services.events import events
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 async def create_pipeline(db: AsyncSession, pipeline_in: PipelineCreate) -> Pipeline:
