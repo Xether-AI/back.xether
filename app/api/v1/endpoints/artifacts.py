@@ -1,6 +1,6 @@
 """Artifact management endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from typing import Optional
 
@@ -189,4 +189,48 @@ async def list_artifacts(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to list artifacts: {str(e)}"
+        )
+
+
+@router.delete("/{artifact_id}", status_code=status.HTTP_200_OK)
+async def delete_artifact(
+    artifact_id: str,
+    current_user: User = Depends(deps.get_current_user),
+    client: ArtifactStorageClient = Depends(get_artifact_storage_client)
+):
+    """
+    Delete an artifact.
+    """
+    try:
+        success = await client.delete_artifact(artifact_id)
+        if success:
+            return {"status": "deleted", "artifact_id": artifact_id}
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to delete artifact"
+            )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to delete artifact: {str(e)}"
+        )
+
+
+@router.post("/{artifact_id}/validate-checksum", response_model=dict)
+async def validate_checksum(
+    artifact_id: str,
+    current_user: User = Depends(deps.get_current_user),
+    client: ArtifactStorageClient = Depends(get_artifact_storage_client)
+):
+    """
+    Validate artifact checksum integrity.
+    """
+    try:
+        validation_result = await client.validate_checksum(artifact_id)
+        return validation_result
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to validate checksum: {str(e)}"
         )

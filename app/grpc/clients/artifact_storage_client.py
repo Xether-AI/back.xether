@@ -264,6 +264,63 @@ class ArtifactStorageClient:
             logger.error(f"gRPC error listing artifacts: {e.code()} - {e.details()}")
             raise
     
+    async def delete_artifact(self, artifact_id: str) -> bool:
+        """
+        Delete an artifact.
+        
+        Args:
+            artifact_id: Artifact ID to delete
+            
+        Returns:
+            True if successful
+        """
+        if not self.stub:
+            raise RuntimeError("Client not connected. Call connect() first.")
+        
+        try:
+            from app.grpc.generated import artifact_pb2
+            
+            request = artifact_pb2.DeleteArtifactRequest(artifact_id=artifact_id)
+            
+            metadata = (("x-api-key", self.api_key),)
+            response = await self.stub.DeleteArtifact(request, metadata=metadata)
+            
+            return response.status == "deleted"
+        except grpc.RpcError as e:
+            logger.error(f"gRPC error deleting artifact: {e.code()} - {e.details()}")
+            raise
+    
+    async def validate_checksum(self, artifact_id: str) -> Dict[str, Any]:
+        """
+        Validate artifact checksum integrity.
+        
+        Args:
+            artifact_id: Artifact ID to validate
+            
+        Returns:
+            Dict with validation results
+        """
+        if not self.stub:
+            raise RuntimeError("Client not connected. Call connect() first.")
+        
+        try:
+            from app.grpc.generated import artifact_pb2
+            
+            request = artifact_pb2.ValidateChecksumRequest(artifact_id=artifact_id)
+            
+            metadata = (("x-api-key", self.api_key),)
+            response = await self.stub.ValidateChecksum(request, metadata=metadata)
+            
+            return {
+                "valid": response.valid,
+                "expected_checksum": response.expected_checksum,
+                "actual_checksum": response.actual_checksum if response.HasField("actual_checksum") else None,
+                "validation_time": response.validation_time.ToDatetime().isoformat() if response.HasField("validation_time") else None
+            }
+        except grpc.RpcError as e:
+            logger.error(f"gRPC error validating checksum: {e.code()} - {e.details()}")
+            raise
+    
     async def close(self):
         """Close gRPC connection."""
         if self.channel:
