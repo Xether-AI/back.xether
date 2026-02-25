@@ -173,17 +173,28 @@ async def get_artifact_metadata(
 async def list_artifacts(
     project_id: Optional[str] = Query(None, description="Filter by project ID"),
     pipeline_id: Optional[str] = Query(None, description="Filter by pipeline ID"),
+    include_versions: bool = Query(False, description="Include version information"),
     current_user: User = Depends(deps.get_current_user),
     client: ArtifactStorageClient = Depends(get_artifact_storage_client)
 ):
     """
-    List artifacts with optional filters.
+    List artifacts with optional filters and version information.
     """
     try:
         artifacts = await client.list_artifacts(
             project_id=project_id,
             pipeline_id=pipeline_id
         )
+        
+        # If version information requested, fetch versions for each artifact
+        if include_versions:
+            for artifact in artifacts:
+                try:
+                    artifact["versions"] = await client.get_versions(artifact["id"])
+                except Exception:
+                    # If we can't get versions, don't fail the entire request
+                    artifact["versions"] = []
+        
         return artifacts
     except Exception as e:
         raise HTTPException(
@@ -366,4 +377,69 @@ async def complete_multipart_upload(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to complete multipart upload: {str(e)}"
+        )
+
+
+# Version Management Request/Response Models
+class ArtifactVersion(BaseModel):
+    """Artifact version information."""
+    version_id: Optional[str] = Field(None, description="S3 version ID")
+    size: int = Field(..., description="Version size in bytes")
+    checksum_sha256: Optional[str] = Field(None, description="SHA256 checksum")
+    created_at: Optional[str] = Field(None, description="Creation timestamp")
+    is_latest: bool = Field(False, description="Whether this is the latest version")
+
+
+class RestoreArtifactRequest(BaseModel):
+    """Request to restore an artifact."""
+    version_id: Optional[str] = Field(None, description="Target version ID (optional)")
+
+
+class RestoreArtifactResponse(BaseModel):
+    """Response with restoration status."""
+    status: str = Field(..., description="Restoration status")
+    restored_version_id: Optional[str] = Field(None, description="Restored version ID")
+    restoration_time: Optional[str] = Field(None, description="Restoration timestamp")
+
+
+# Version Management Endpoints
+@router.get("/{artifact_id}/versions", response_model=list[ArtifactVersion], status_code=status.HTTP_200_OK)
+async def get_artifact_versions(
+    artifact_id: str,
+    current_user: User = Depends(deps.get_current_user),
+    client: ArtifactStorageClient = Depends(get_artifact_storage_client)
+):
+    """
+    Get version history for an artifact.
+    """
+    try:
+        versions = await client.get_versions(artifact_id)
+        return versions
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get artifact versions: {str(e)}"
+        )
+
+
+@router.post("/{artifact_id}/restore", response_model=RestoreArtifactResponse, status_code=status.HTTP_200_OK)
+async def restore_artifact(
+    artifact_id: str,
+    request: RestoreArtifactRequest,
+    current_user: User = Depends(deps.get_current_user),
+    client: ArtifactStorageClient = Depends(get_artifact_storage_client)
+):
+    """
+    Restore an artifact to a specific version.
+    """
+    try:
+        result = await client.restore_artifact(
+            artifact_id=artifact_id,
+            version_id=request.version_id
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to restore artifact: {str(e)}"
         )
