@@ -152,3 +152,33 @@ async def list_executions(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
     
     return await pipeline_service.list_pipeline_executions(db, pipeline_id=pipeline_id)
+
+
+@router.get("/{pipeline_id}/executions/{execution_id}", response_model=PipelineExecutionResponse)
+async def get_execution(
+    pipeline_id: int,
+    execution_id: int,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+) -> Any:
+    """Get specific pipeline execution details."""
+    # Verify pipeline exists and user has access
+    pipeline = await pipeline_service.get_pipeline(db, pipeline_id=pipeline_id)
+    if not pipeline:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pipeline not found")
+    
+    project = await project_service.get_project(db, project_id=pipeline.project_id)
+    role = await team_service.get_user_role_in_team(db, team_id=project.team_id, user_id=current_user.id)
+    if not role and not current_user.is_superuser:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+    
+    # Get execution details
+    execution = await pipeline_service.get_pipeline_execution(db, execution_id=execution_id)
+    if not execution:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Execution not found")
+    
+    # Verify execution belongs to the specified pipeline
+    if execution.pipeline_id != pipeline_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Execution not found for this pipeline")
+    
+    return execution
