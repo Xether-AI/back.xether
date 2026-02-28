@@ -28,6 +28,9 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """User creation schema."""
     password: str = Field(..., min_length=8, examples=["strong_password_123"])
+    username: Optional[str] = Field(None, examples=["janesmith"])
+    full_name: Optional[str] = Field(None, examples=["Jane Smith"])
+    phone_number: Optional[str] = Field(None, examples=["+1234567890"])
 
 
 
@@ -40,6 +43,9 @@ class UserLogin(UserBase):
 class UserResponse(UserBase):
     """User response schema."""
     id: int
+    username: Optional[str]
+    full_name: Optional[str]
+    phone_number: Optional[str]
     is_active: bool
     is_superuser: bool
     created_at: datetime
