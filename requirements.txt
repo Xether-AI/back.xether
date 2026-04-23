@@ -30,8 +30,20 @@ protobuf>=4.25.0
 # HTTP Client
 httpx>=0.26.0
 
+# Observability
+prometheus-fastapi-instrumentator>=6.1.0
+python-json-logger>=2.0.7
+
+# Task Queue
+celery>=5.3.6
+
+# Server
+gunicorn>=21.2.0
+
 # Utilities
 python-dotenv>=1.0.0
+email-validator>=2.1.0
+bcrypt==4.0.1
 
 # Development Dependencies
 pytest>=7.4.3
